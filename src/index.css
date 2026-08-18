@@ -1,0 +1,77 @@
+:root {
+  /* Color tokens */
+  --ink: #12181B;
+  --paper: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface-dark: #1B2226;
+  --pulse: #2E7D6B;
+  --pulse-soft: #DCEBE6;
+  --alert: #C4573B;
+  --alert-soft: #F3E1DB;
+  --amber: #B8863B;
+  --line-light: #E4E0D8;
+  --line-dark: #2A3237;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.font-display {
+  font-family: 'Fraunces', serif;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Default Patient Theme */
+.theme-patient {
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* Caretaker Dashboard Theme */
+.theme-caretaker {
+  background-color: var(--surface-dark);
+  color: #F8F9FA;
+  min-height: 100vh;
+}
+
+.theme-caretaker .text-ink {
+  color: #FFFFFF;
+}
+
+.theme-caretaker .text-muted {
+  color: #A1AAB0;
+}
+
+button {
+  font-family: 'Inter', sans-serif;
+  border: none;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--pulse);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
