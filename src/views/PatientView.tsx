@@ -30,6 +30,11 @@ export const PatientView: React.FC<PatientViewProps> = ({ patientId }) => {
     await api.markDose({ dose_log_id: medId, status: 'taken' });
   };
 
+  const playReminder = () => {
+    const audio = new Audio(`/audio/${patientId}_reminder.mp3`);
+    audio.play().catch(e => console.error("Audio play failed", e));
+  };
+
   const formattedTime = currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
   return (
@@ -39,6 +44,23 @@ export const PatientView: React.FC<PatientViewProps> = ({ patientId }) => {
       </div>
 
       <div style={styles.cardList}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <button 
+            onClick={playReminder}
+            style={{
+              ...styles.button,
+              backgroundColor: 'var(--amber)',
+              minHeight: '48px',
+              fontSize: '18px',
+              padding: '12px 24px',
+              borderRadius: '100px',
+              boxShadow: '0 4px 12px rgba(184, 134, 59, 0.2)'
+            }}
+          >
+            🔊 Play Audio Reminder
+          </button>
+        </div>
+
         {meds.filter(m => m.status === 'pending' || animatingMeds[m.id]).map(med => {
           const isTaken = med.status === 'taken';
 

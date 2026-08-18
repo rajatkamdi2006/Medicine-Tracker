@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "elevenlabs": {
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "sk_aa2d9695b23a05fef77273f4ef0c713c4ae5206b78e507f4",
+        "ELEVENLABS_MCP_OUTPUT_MODE": "files",
+        "ELEVENLABS_MCP_BASE_PATH": "c:/Medicine tracker Elderly People/public/audio"
+      }
+    }
+  }
+}
