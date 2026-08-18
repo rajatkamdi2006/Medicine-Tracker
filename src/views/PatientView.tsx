@@ -2,32 +2,31 @@ import { useEffect, useState } from 'react';
 import { api, type MedicationDose } from '../api';
 import { PulseRing } from '../components/PulseRing';
 
-export const PatientView: React.FC = () => {
+interface PatientViewProps {
+  patientId: string;
+}
+
+export const PatientView: React.FC<PatientViewProps> = ({ patientId }) => {
   const [meds, setMeds] = useState<MedicationDose[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [animatingMeds, setAnimatingMeds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Clock
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // update every minute
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    // Fetch initial meds
-    api.getTodaysMeds().then(data => setMeds(data));
-  }, []);
+    // Reset animation state and fetch meds on patient change
+    setAnimatingMeds({});
+    api.getTodaysMeds(patientId).then(data => setMeds(data));
+  }, [patientId]);
 
   const handleTakeMed = async (medId: string) => {
-    // 1. Trigger animation state
     setAnimatingMeds(prev => ({ ...prev, [medId]: true }));
-    
-    // 2. Optimistic update
     setMeds(prev => 
       prev.map(m => m.id === medId ? { ...m, status: 'taken' } : m)
     );
-
-    // 3. Call API
     await api.markDose({ dose_log_id: medId, status: 'taken' });
   };
 
@@ -35,21 +34,16 @@ export const PatientView: React.FC = () => {
 
   return (
     <div className="theme-patient" style={styles.container}>
-      
-      {/* Huge Current Time */}
       <div style={styles.timeDisplay}>
         {formattedTime}
       </div>
 
-      {/* Medication Cards */}
       <div style={styles.cardList}>
         {meds.filter(m => m.status === 'pending' || animatingMeds[m.id]).map(med => {
-          
           const isTaken = med.status === 'taken';
 
           return (
             <div key={med.id} style={styles.card}>
-              
               <div style={styles.cardHeader}>
                 <PulseRing 
                   percentage={isTaken ? 100 : 85} 
@@ -64,7 +58,7 @@ export const PatientView: React.FC = () => {
                 {med.name}
               </h1>
               <p style={styles.medDetails}>
-                {med.dosage} &middot; Due now
+                {med.dosage} &middot; {med.scheduled_time}
               </p>
 
               <button 
@@ -81,7 +75,6 @@ export const PatientView: React.FC = () => {
                   'I TOOK IT'
                 )}
               </button>
-
             </div>
           );
         })}
@@ -139,7 +132,7 @@ const styles = {
   },
   medDetails: {
     fontSize: '20px',
-    color: '#6B7280', // Slightly muted ink
+    color: '#6B7280',
     marginBottom: '32px',
   },
   button: {
@@ -154,7 +147,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '68px', // large touch target
+    minHeight: '68px',
   },
   buttonTaken: {
     backgroundColor: 'var(--pulse-soft)',

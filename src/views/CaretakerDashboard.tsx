@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
-import { api, type AIReport, type MedicationHistory } from '../api';
+import { api, type AIReport, type MedicationHistory, type Patient } from '../api';
 import { PulseRing } from '../components/PulseRing';
 
-export const CaretakerDashboard: React.FC = () => {
+interface CaretakerDashboardProps {
+  patient?: Patient;
+}
+
+export const CaretakerDashboard: React.FC<CaretakerDashboardProps> = ({ patient }) => {
   const [report, setReport] = useState<AIReport | null>(null);
   const [history, setHistory] = useState<MedicationHistory[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    // Fetch History
-    api.getAdherenceHistory({ patient_id: 'p1' }).then(setHistory);
-  }, []);
+    if (!patient) return;
+    // Reset state on patient change
+    setReport(null);
+    api.getAdherenceHistory({ patient_id: patient.id }).then(setHistory);
+  }, [patient]);
 
   const handleGenerate = async () => {
+    if (!patient) return;
     setIsGenerating(true);
     try {
-      const newReport = await api.generateAIInsight({ patient_id: 'p1' });
+      const newReport = await api.generateAIInsight({ patient_id: patient.id });
       setReport(newReport);
     } finally {
       setIsGenerating(false);
@@ -39,6 +46,8 @@ export const CaretakerDashboard: React.FC = () => {
 
   const adherence = getAdherencePercentage();
 
+  if (!patient) return null;
+
   return (
     <div className="theme-caretaker" style={styles.container}>
       
@@ -48,10 +57,20 @@ export const CaretakerDashboard: React.FC = () => {
           <h2 style={styles.logo}>MedLoop</h2>
         </div>
         <div style={styles.patientInfo}>
-          <span style={styles.patientName}>Meera's mother</span>
+          <span style={styles.patientName}>{patient.name}</span>
           <span style={styles.onlineBadge}>&#9900; online</span>
         </div>
       </header>
+
+      {/* Patient Profile Context */}
+      <div style={styles.profileSection}>
+        <div style={styles.profileMeta}>
+          {patient.age}-year-old {patient.gender}
+        </div>
+        <div style={styles.profileConditions}>
+          {patient.conditions.join(' • ')}
+        </div>
+      </div>
 
       {/* AI Insight Card */}
       <div style={styles.insightCard}>
@@ -115,11 +134,8 @@ export const CaretakerDashboard: React.FC = () => {
       <div style={styles.timelineSection}>
         <h3 style={styles.sectionTitle}>This week</h3>
         
-        {/* We simplify by showing a consolidated timeline for demo, or take the first med's timeline as the primary display if there are multiple. For UI accuracy, let's render a consolidated view of days. */}
         <div style={styles.daysRow}>
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
-            // Mock data maps roughly to these days, let's simulate status for visual
-            // In a real app we'd aggregate history.by_date per day.
             const dateStr = `2026-08-${12 + i}`;
             let dayStatus = 'pending';
             history.forEach(h => {
@@ -146,7 +162,7 @@ export const CaretakerDashboard: React.FC = () => {
               <div key={med.medication_id} style={styles.medListItem}>
                 <span style={styles.medListTitle}>{med.name}</span>
                 <span className="font-tabular" style={styles.medListStats}>
-                  taken {med.taken_count}/{total}
+                  {total > 0 ? `taken ${med.taken_count}/${total}` : 'no doses this week'}
                 </span>
               </div>
             )
@@ -162,12 +178,13 @@ const styles = {
     padding: '24px 20px',
     maxWidth: '500px',
     margin: '0 auto',
+    paddingBottom: '80px', // Extra space for demo switcher
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '32px',
+    marginBottom: '16px',
   },
   logo: {
     fontSize: '20px',
@@ -182,13 +199,34 @@ const styles = {
   },
   patientName: {
     color: '#E4E0D8',
+    fontWeight: 500,
   },
   onlineBadge: {
     color: 'var(--pulse)',
     fontSize: '13px',
   },
+  profileSection: {
+    marginBottom: '32px',
+    padding: '16px',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255,255,255,0.05)',
+  },
+  profileMeta: {
+    fontSize: '13px',
+    color: '#A1AAB0',
+    marginBottom: '6px',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    fontWeight: 600,
+  },
+  profileConditions: {
+    fontSize: '15px',
+    color: '#E4E0D8',
+    lineHeight: '1.4',
+  },
   insightCard: {
-    backgroundColor: '#20282C', // Slightly lighter than background
+    backgroundColor: '#20282C',
     borderRadius: '24px',
     padding: '24px',
     border: '1px solid var(--line-dark)',
@@ -228,7 +266,7 @@ const styles = {
   },
   suggestedAction: {
     fontSize: '15px',
-    color: '#A1AAB0', // muted text
+    color: '#A1AAB0',
     margin: 0,
   },
   insightFooter: {
@@ -243,7 +281,7 @@ const styles = {
     padding: '8px 16px',
     border: '1px solid var(--pulse-soft)',
     borderRadius: '100px',
-    borderColor: 'rgba(220, 235, 230, 0.2)', // Dark mode friendly line
+    borderColor: 'rgba(220, 235, 230, 0.2)',
   },
   timelineSection: {
     padding: '0 8px',
