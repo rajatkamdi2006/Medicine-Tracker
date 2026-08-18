@@ -10,7 +10,11 @@ function App() {
 
   useEffect(() => {
     api.getPatients().then(data => {
-      setPatients(data);
+      const patientList = (data || []).filter((p: Patient) => p.role !== 'caretaker');
+      setPatients(patientList);
+      if (patientList.length > 0) {
+        setSelectedPatientId(patientList[0].id);
+      }
     });
   }, []);
 

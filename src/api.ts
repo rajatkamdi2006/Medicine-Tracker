@@ -7,6 +7,8 @@ export type ConfidenceLevel = 'low' | 'medium' | 'high';
 export interface Patient {
   id: string;
   name: string;
+  full_name?: string;
+  role?: string;
   age: number;
   gender: 'male' | 'female';
   conditions: string[];
